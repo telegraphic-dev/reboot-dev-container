@@ -2,6 +2,16 @@
 
 A public Docker development image for [Reboot](https://reboot.dev) applications. It starts the Reboot app, developer dashboard, and a Streamable HTTP MCP server that exposes the `rbt` CLI inside the container.
 
+## Container image
+
+Every push to `main` publishes a multi-architecture image for `linux/amd64` and `linux/arm64` to GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/telegraphic-dev/reboot-dev-container:latest
+```
+
+Pull requests build both architectures but do not publish an image.
+
 ## Quick start
 
 Create a local app directory from a Reboot project (it must include `.rbtrc`):
