@@ -1,0 +1,13 @@
+services:
+  reboot:
+    build: .
+    ports:
+      - "9991:9991" # Reboot application and inspect UI
+      - "9871:9871" # Reboot developer dashboard
+      - "3000:3000" # Streamable HTTP MCP at /mcp
+    volumes:
+      - ./app:/workspace
+    environment:
+      RBT_APP_PORT: "9991"
+      RBT_DASHBOARD_PORT: "9871"
+      MCP_PORT: "3000"

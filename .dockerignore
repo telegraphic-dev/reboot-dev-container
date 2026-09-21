@@ -1,0 +1,7 @@
+.git
+.github
+app/.rbt
+app/node_modules
+app/.venv
+__pycache__
+*.py[cod]
