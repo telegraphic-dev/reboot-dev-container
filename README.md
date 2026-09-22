@@ -63,7 +63,7 @@ Run `rbt(["--help"])` or a command-specific `--help` before using unfamiliar ope
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `RBT_APP_PORT` | `9991` | Reboot application port |
-| `RBT_APPLICATION_URL` | `http://127.0.0.1:$RBT_APP_PORT` | Default application URL injected into `rbt inspect ...` when the caller does not provide one |
+| `RBT_APPLICATION_URL` | `http://127.0.0.1:$RBT_APP_PORT` | Default application URL injected into `rbt inspect ...`, `rbt export`, and `rbt import` when the caller does not provide one |
 | `RBT_DASHBOARD_PORT` | `9871` | Dashboard port |
 | `MCP_PORT` | `3000` | MCP HTTP port |
 | `MCP_BEARER_TOKEN` | unset | Optional bearer token; set this whenever the MCP is reachable outside a trusted local network |

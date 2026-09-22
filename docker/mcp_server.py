@@ -27,9 +27,11 @@ def _has_option(arguments: list[str], option: str) -> bool:
     return option in arguments or any(argument.startswith(f"{option}=") for argument in arguments)
 
 
-def _with_inspect_application_url(arguments: list[str]) -> list[str]:
-    if arguments[:1] == ["inspect"] and not _has_option(
-        arguments, "--application-url"
+def _with_default_application_url(arguments: list[str]) -> list[str]:
+    if (
+        arguments
+        and arguments[0] in {"inspect", "export", "import"}
+        and not _has_option(arguments, "--application-url")
     ):
         return [*arguments, f"--application-url={APPLICATION_URL}"]
     return arguments
@@ -52,15 +54,16 @@ def rbt(arguments: list[str]) -> dict[str, object]:
     """Run `rbt` with argv-style arguments in /workspace.
 
     Example: arguments=["generate"] or arguments=["inspect", "type", "list"].
-    Inspect commands automatically receive --application-url from
-    RBT_APPLICATION_URL (defaulting to the local Reboot app) unless you
+    Inspect, export, and import commands automatically receive
+    --application-url from RBT_APPLICATION_URL (defaulting to the local Reboot
+    app) unless you
     supply --application-url explicitly. A non-zero rbt exit code is returned
     as an MCP tool error. The command is never passed through a shell.
     """
     if any(not isinstance(argument, str) for argument in arguments):
         raise ValueError("arguments must be an array of strings")
 
-    resolved_arguments = _with_inspect_application_url(arguments)
+    resolved_arguments = _with_default_application_url(arguments)
     result = subprocess.run(
         ["rbt", *resolved_arguments],
         cwd=WORKSPACE,
