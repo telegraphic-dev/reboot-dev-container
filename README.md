@@ -39,7 +39,10 @@ Point an MCP client that supports Streamable HTTP at:
   "mcpServers": {
     "reboot-rbt": {
       "type": "streamable-http",
-      "url": "http://localhost:3000/mcp"
+      "url": "http://localhost:3000/mcp",
+      "headers": {
+        "Authorization": "Bearer <MCP_BEARER_TOKEN>"
+      }
     }
   }
 }
@@ -62,13 +65,14 @@ Run `rbt(["--help"])` or a command-specific `--help` before using unfamiliar ope
 | `RBT_APP_PORT` | `9991` | Reboot application port |
 | `RBT_DASHBOARD_PORT` | `9871` | Dashboard port |
 | `MCP_PORT` | `3000` | MCP HTTP port |
+| `MCP_BEARER_TOKEN` | unset | Optional bearer token; set this whenever the MCP is reachable outside a trusted local network |
 | `RBT_COMMAND_TIMEOUT_SECONDS` | `120` | Maximum duration for one MCP `rbt` request |
 
 `RBT_APP_PORT` and `RBT_DASHBOARD_PORT` are passed to the corresponding `rbt` processes. The image includes Python 3.12, Node.js 22, and `reboot[dev]` 1.6.0.
 
 ## Security
 
-This is a local development image. Do not expose port 3000 directly to an untrusted network: its MCP endpoint can run every `rbt` command available in the mounted project. Put it behind authenticated access if remote agents need it.
+This is a local development image. Do not expose port 3000 directly to an untrusted network: its MCP endpoint can run every `rbt` command available in the mounted project. Set a high-entropy `MCP_BEARER_TOKEN` for every remote deployment; requests must include `Authorization: Bearer <token>`.
 
 ## Build only
 
