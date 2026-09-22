@@ -66,6 +66,8 @@ Run `rbt(["--help"])` or a command-specific `--help` before using unfamiliar ope
 | `RBT_DASHBOARD_PORT` | `9871` | Dashboard port |
 | `MCP_PORT` | `3000` | MCP HTTP port |
 | `MCP_BEARER_TOKEN` | unset | Optional bearer token; set this whenever the MCP is reachable outside a trusted local network |
+| `WORKSPACE_GIT_URL` | unset | Public Git repository cloned into an otherwise empty `/workspace` at startup |
+| `WORKSPACE_GIT_REF` | `main` | Branch or tag to clone when `WORKSPACE_GIT_URL` is set |
 | `RBT_COMMAND_TIMEOUT_SECONDS` | `120` | Maximum duration for one MCP `rbt` request |
 
 `RBT_APP_PORT` and `RBT_DASHBOARD_PORT` are passed to the corresponding `rbt` processes. The image includes Python 3.12, Node.js 22, and `reboot[dev]` 1.6.0.

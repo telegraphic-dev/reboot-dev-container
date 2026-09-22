@@ -14,7 +14,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     RBT_DASHBOARD_PORT=9871
 
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y ca-certificates curl tini \
+    && apt-get install --no-install-recommends -y ca-certificates curl git tini \
     && curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
     && apt-get install --no-install-recommends -y nodejs \
     && rm -rf /var/lib/apt/lists/*
