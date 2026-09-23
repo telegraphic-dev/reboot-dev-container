@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 from pathlib import Path
+from typing import Literal
 
 import uvicorn
 from mcp.server.fastmcp import FastMCP
@@ -21,6 +22,18 @@ APPLICATION_URL = os.environ.get(
     "RBT_APPLICATION_URL",
     f"http://127.0.0.1:{os.environ.get('RBT_APP_PORT', '9991')}",
 )
+PROTO_DIRECTORY = (WORKSPACE / os.environ.get("RBT_PROTO_DIRECTORY", "api")).resolve()
+MAX_PROTO_FILE_BYTES = int(os.environ.get("RBT_MAX_PROTO_FILE_BYTES", "1048576"))
+
+if not PROTO_DIRECTORY.is_relative_to(WORKSPACE):
+    raise RuntimeError("RBT_PROTO_DIRECTORY must be inside WORKSPACE")
+
+
+def _proto_path(path: str) -> Path:
+    candidate = (PROTO_DIRECTORY / path).resolve()
+    if not candidate.is_relative_to(PROTO_DIRECTORY) or candidate.suffix != ".proto":
+        raise ValueError("path must be a .proto file within RBT_PROTO_DIRECTORY")
+    return candidate
 
 
 def _has_option(arguments: list[str], option: str) -> bool:
@@ -40,7 +53,8 @@ mcp = FastMCP(
     "reboot-rbt",
     instructions=(
         "Run the Reboot rbt CLI in the mounted workspace. First use rbt_describe "
-        "to list commands, then rbt_help for exact syntax. Inspect commands default "
+        "to list commands, then rbt_help for exact syntax. Use rbt_proto to "
+        "manage .proto files under RBT_PROTO_DIRECTORY. Inspect commands default "
         "to RBT_APPLICATION_URL (or the local Reboot app)."
     ),
     host=HOST,
@@ -88,6 +102,58 @@ def rbt_help(command: list[str] | None = None) -> dict[str, object]:
     command=["inspect", "state", "list"] or command=["export"].
     """
     return _run_rbt([*(command or []), "--help"])
+
+
+@mcp.tool()
+def rbt_proto(
+    action: Literal["list", "read", "write"],
+    path: str | None = None,
+    content: str | None = None,
+) -> dict[str, object]:
+    """List, read, or write .proto source files under RBT_PROTO_DIRECTORY.
+
+    `list` requires no path. `read` requires a relative .proto path. `write`
+    requires both a relative .proto path and complete UTF-8 content; it creates
+    missing parent directories and replaces that one file. Paths cannot escape
+    RBT_PROTO_DIRECTORY. Run rbt(["generate"]) after changing a proto file.
+    """
+    if action == "list":
+        if path is not None or content is not None:
+            raise ValueError("list does not accept path or content")
+        if not PROTO_DIRECTORY.exists():
+            return {"files": []}
+        return {
+            "files": [
+                str(item.relative_to(PROTO_DIRECTORY))
+                for item in sorted(PROTO_DIRECTORY.rglob("*.proto"))
+                if item.is_file()
+            ]
+        }
+
+    if path is None:
+        raise ValueError(f"{action} requires path")
+    target = _proto_path(path)
+
+    if action == "read":
+        if content is not None:
+            raise ValueError("read does not accept content")
+        if not target.is_file():
+            raise FileNotFoundError(f"proto file does not exist: {path}")
+        if target.stat().st_size > MAX_PROTO_FILE_BYTES:
+            raise ValueError(f"proto file exceeds {MAX_PROTO_FILE_BYTES} bytes")
+        return {"path": str(target.relative_to(PROTO_DIRECTORY)), "content": target.read_text()}
+
+    if content is None:
+        raise ValueError("write requires content")
+    encoded_content = content.encode()
+    if len(encoded_content) > MAX_PROTO_FILE_BYTES:
+        raise ValueError(f"content exceeds {MAX_PROTO_FILE_BYTES} bytes")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content)
+    return {
+        "path": str(target.relative_to(PROTO_DIRECTORY)),
+        "bytes_written": len(encoded_content),
+    }
 
 
 @mcp.tool()
