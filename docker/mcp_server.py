@@ -49,20 +49,7 @@ mcp = FastMCP(
 )
 
 
-@mcp.tool()
-def rbt(arguments: list[str]) -> dict[str, object]:
-    """Run `rbt` with argv-style arguments in /workspace.
-
-    Example: arguments=["generate"] or arguments=["inspect", "type", "list"].
-    Inspect, export, and import commands automatically receive
-    --application-url from RBT_APPLICATION_URL (defaulting to the local Reboot
-    app) unless you
-    supply --application-url explicitly. A non-zero rbt exit code is returned
-    as an MCP tool error. The command is never passed through a shell.
-    """
-    if any(not isinstance(argument, str) for argument in arguments):
-        raise ValueError("arguments must be an array of strings")
-
+def _run_rbt(arguments: list[str]) -> dict[str, object]:
     resolved_arguments = _with_default_application_url(arguments)
     result = subprocess.run(
         ["rbt", *resolved_arguments],
@@ -81,6 +68,60 @@ def rbt(arguments: list[str]) -> dict[str, object]:
     if result.returncode:
         raise ToolError(json.dumps(response))
     return response
+
+
+@mcp.tool()
+def list_state_types() -> dict[str, object]:
+    """List Reboot state type names in the running application."""
+    return _run_rbt(["inspect", "type", "list"])
+
+
+@mcp.tool()
+def list_state_ids(type_name: str) -> dict[str, object]:
+    """List state IDs for one fully-qualified Reboot state type."""
+    return _run_rbt(["inspect", "state", "list", f"--type={type_name}"])
+
+
+@mcp.tool()
+def get_state(type_name: str, state_id: str) -> dict[str, object]:
+    """Read one state value by fully-qualified Reboot type name and ID."""
+    return _run_rbt(
+        ["inspect", "state", "get", f"--type={type_name}", f"--id={state_id}"]
+    )
+
+
+@mcp.tool()
+def generate() -> dict[str, object]:
+    """Regenerate code from this workspace's .rbtrc configuration."""
+    return _run_rbt(["generate"])
+
+
+@mcp.tool()
+def rbt_help(command: list[str]) -> dict[str, object]:
+    """Show exact Reboot CLI syntax before using an unfamiliar rbt command.
+
+    Examples: command=[]; command=["inspect", "state", "list"]; or
+    command=["export"]. This app uses `inspect type list`, not `inspect type
+    <type-name>`; `export` and `import` require --directory.
+    """
+    return _run_rbt([*command, "--help"])
+
+
+@mcp.tool()
+def rbt(arguments: list[str]) -> dict[str, object]:
+    """Run an advanced Reboot CLI command in /workspace without a shell.
+
+    Prefer the dedicated list_state_types, list_state_ids, get_state, and
+    generate tools. For any other operation, call rbt_help first. Valid
+    examples include arguments=["inspect", "type", "list"],
+    arguments=["export", "--directory=/workspace/export"], and
+    arguments=["generate", "api"]. `rbt` never accepts shell syntax.
+    Application URL defaults are supplied for inspect, export, and import;
+    a non-zero rbt exit is returned as an MCP tool error.
+    """
+    if any(not isinstance(argument, str) for argument in arguments):
+        raise ValueError("arguments must be an array of strings")
+    return _run_rbt(arguments)
 
 
 if __name__ == "__main__":
