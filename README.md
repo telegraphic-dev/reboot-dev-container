@@ -48,15 +48,16 @@ Point an MCP client that supports Streamable HTTP at:
 }
 ```
 
-The server provides one `rbt(arguments)` tool. It accepts argv-style arguments and never invokes a shell:
+The server exposes the complete `rbt(arguments)` CLI, plus two discovery tools. Every tool uses argv-style arguments and never invokes a shell:
 
 ```text
-rbt(["generate"])
+rbt_describe()
+rbt_help(command=["inspect", "state", "list"])
 rbt(["inspect", "type", "list"])
 rbt(["task", "list"])
 ```
 
-Run `rbt(["--help"])` or a command-specific `--help` before using unfamiliar operations. `rbt` has state-changing and cloud commands; the MCP intentionally exposes the actual CLI rather than pretending those commands are read-only.
+Start with `rbt_describe` to get the actual available Reboot commands, then use `rbt_help` for exact syntax before an unfamiliar operation. This prevents agents from guessing strict Reboot grammar (`inspect type list`, not `inspect type <type-name>`); it also shows required arguments such as export/import's `--directory`. `rbt` has state-changing and cloud commands; the MCP intentionally exposes the actual CLI rather than pretending those commands are read-only.
 
 ## Configuration
 
