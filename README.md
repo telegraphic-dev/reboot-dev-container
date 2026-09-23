@@ -48,16 +48,18 @@ Point an MCP client that supports Streamable HTTP at:
 }
 ```
 
-The server exposes the complete `rbt(arguments)` CLI, plus two discovery tools. Every tool uses argv-style arguments and never invokes a shell:
+The server exposes the complete `rbt(arguments)` CLI, discovery tools, and a constrained proto-file tool. Every tool uses argv-style arguments and never invokes a shell:
 
 ```text
 rbt_describe()
 rbt_help(command=["inspect", "state", "list"])
-rbt(["inspect", "type", "list"])
-rbt(["task", "list"])
+rbt_proto(action="list")
+rbt_proto(action="read", path="example/v1/example.proto")
+rbt_proto(action="write", path="example/v1/example.proto", content="...")
+rbt(["generate"])
 ```
 
-Start with `rbt_describe` to get the actual available Reboot commands, then use `rbt_help` for exact syntax before an unfamiliar operation. This prevents agents from guessing strict Reboot grammar (`inspect type list`, not `inspect type <type-name>`); it also shows required arguments such as export/import's `--directory`. `rbt` has state-changing and cloud commands; the MCP intentionally exposes the actual CLI rather than pretending those commands are read-only.
+Start with `rbt_describe` to get the actual available Reboot commands, then use `rbt_help` for exact syntax before an unfamiliar operation. This prevents agents from guessing strict Reboot grammar (`inspect type list`, not `inspect type <type-name>`); it also shows required arguments such as export/import's `--directory`. `rbt_proto` is limited to `.proto` files beneath `RBT_PROTO_DIRECTORY`; after writing a schema, run `rbt(["generate"])`. `rbt` has state-changing and cloud commands; the MCP intentionally exposes the actual CLI rather than pretending those commands are read-only.
 
 ## Configuration
 
@@ -71,6 +73,8 @@ Start with `rbt_describe` to get the actual available Reboot commands, then use 
 | `WORKSPACE_GIT_URL` | unset | Public Git repository cloned into an otherwise empty `/workspace` at startup |
 | `WORKSPACE_GIT_REF` | `main` | Branch or tag to clone when `WORKSPACE_GIT_URL` is set |
 | `RBT_COMMAND_TIMEOUT_SECONDS` | `120` | Maximum duration for one MCP `rbt` request |
+| `RBT_PROTO_DIRECTORY` | `api` | Workspace-relative root accepted by the `rbt_proto` file tool |
+| `RBT_MAX_PROTO_FILE_BYTES` | `1048576` | Maximum individual proto file size accepted by `rbt_proto` |
 
 `RBT_APP_PORT` and `RBT_DASHBOARD_PORT` are passed to the corresponding `rbt` processes. The image includes Python 3.12, Node.js 22, and `reboot[dev]` 1.6.0.
 
